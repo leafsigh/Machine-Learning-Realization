@@ -1,0 +1,145 @@
+---
+title: "Lazy_learning_Classification_using_nearest_neighbors"
+output: html_document
+---
+
+---
+The kNN Algo
+1) Class: benign and malignant
+2) Calculate the distance between target and nearest k neighbors. Find the shortest distance to decide target's class
+3) Too large k may cause the target being classified into the class which has most common characteristic. Too small k may cause overfitted (the target may have singularity and be misclassified)
+---
+```{r}
+download.file('https://archive.ics.uci.edu/ml/machine-learning-databases/breast-cancer-wisconsin/breast-cancer-wisconsin.data',destfile = '/Users/yisongdong/Desktop/MSF&Python/MSF/Big Data Analysis/machine_learning/Breast Cancer Wisconsin Diagnostic/cancer.csv')
+download.file('https://archive.ics.uci.edu/ml/machine-learning-databases/breast-cancer-wisconsin/breast-cancer-wisconsin.names',destfile = '/Users/yisongdong/Desktop/MSF&Python/MSF/Big Data Analysis/machine_learning/Breast Cancer Wisconsin Diagnostic/cancer_name.txt')
+download.file('https://archive.ics.uci.edu/ml/machine-learning-databases/breast-cancer-wisconsin/wdbc.data',destfile = '/Users/yisongdong/Desktop/MSF&Python/MSF/Big Data Analysis/machine_learning/Breast Cancer Wisconsin Diagnostic/wbcd.csv')
+```
+```{r}
+wbcd_data<-read.csv('/Users/yisongdong/Desktop/MSF&Python/MSF/Big Data Analysis/machine_learning/Breast Cancer Wisconsin Diagnostic/wbcd.csv',header = FALSE, stringsAsFactors = FALSE)
+colnames(wbcd_data)<-c('Id','Diagnosis','radius_mean','?','?','area_mean','smoothness_mean')
+```
+
+```{r}
+table(wbcd_data$Diagnosis)
+```
+```{r}
+# Many R machine learning classi ers require that the target feature is coded as a factor, so we will need to recode the diagnosis variable. We will also take this opportunity to give the B and M values more informative labels using the labels parameter:
+wbcd_data$Diagnosis<-factor(wbcd_data$Diagnosis, levels=c('B','M'), labels = c('Benign', 'Malignant'))
+table(wbcd_data$Diagnosis)
+```
+```{r}
+prop.table(table(wbcd_data$Diagnosis))*100
+```
+```{r}
+summary(wbcd_data[c('radius_mean','area_mean','smoothness_mean')])
+```
+
+Transformation--normalizing numerica data
+```{r}
+# scale all values
+normalize1<-function(x){
+  return((x-min(x))/(max(x)-min(x)))
+}
+```
+```{r}
+wbcd_scaled1<-as.data.frame(lapply(wbcd_data[3:32], normalize1))
+summary(wbcd_scaled1[c('radius_mean','area_mean','smoothness_mean')])
+wbcd_scaled1
+```
+```{r}
+# don't re-run this chunk, or the order will be a mess.
+# if have to re-run, then run last chunk first.
+require(dplyr)
+wbcd_scaled1<-mutate(wbcd_scaled1, Diagnosis = wbcd_data$Diagnosis)
+wbcd_scaled1<-wbcd_scaled1[,c(31,1:30)]
+wbcd_scaled1
+```
+
+
+Data Preparation--creating training and test datasets
+```{r}
+# randomly choose 469 training data and 100 test data
+set.seed(11)
+train_id<-sample(569,469)
+```
+```{r}
+# reserve training set & testing set in different dataframe
+wbcd_train<-wbcd_scaled1[train_id,c(1,2,5,6)]
+wbcd_test<-wbcd_scaled1[-train_id,c(1,2,5,6)]
+```
+
+Training a model on the data
+```{r}
+# need to load a package called class
+if(!require(class)){
+  install.packages('class')
+}
+```
+```{r}
+# Class package has knn() function, which provides a standard and classic inplementation of kNN algorithm. knn() function performed in a single function call, using 4 parameters, as shown in knn(train, test, cl, k).
+# ** parameter 'cl' (class) is a factor vector with the class for each row in training data
+# more sophiscated kNN functions can refer to CRAN
+wbcd_knn<-knn(train = wbcd_train[,2:4], test = wbcd_test[,2:4], cl = wbcd_train$Diagnosis, k=11)
+wbcd_knn
+# WARNING: when use knn() function, 'train' and 'test' can't include the 'class' vector, therefore we choose 'train = wbcd_train[,2:4], test = wbcd_test[,2:4]'. 
+```
+
+Evaluating model performance
+```{r}
+# compare the evaluating result and test data set
+# we don't need chi square here
+require(gmodels)
+CrossTable(x = wbcd_knn, y = wbcd_test$Diagnosis, prop.chisq  = FALSE)
+```
+The upper left cell and lower right cell of the cross table indicates kNN correctly evaluate the result (evaluate bening as benign and malignant as malignant) . Upper right and lower left means misvalued (evaluate malignant as benign and benign as malignant).
+
+
+Improving model performance
+```{r}
+# First improvement: rescaling numeric features with z-score method
+summary(wbcd_data[,c(3,6,7)])
+
+# this function does the z-score scaling
+normalize2<-function(x){
+  return((x-mean(x))/sd(x))
+}
+```
+```{r}
+wbcd_scaled2<-as.data.frame(lapply(wbcd_data[,c(3,6,7)],normalize2))
+wbcd_scaled2<-mutate(wbcd_scaled2,Diagnosis=wbcd_data$Diagnosis)
+wbcd_scaled2<-wbcd_scaled2[,c(4,1:3)]
+wbcd_scaled2
+```
+```{r}
+set.seed(22)
+train<-sample(569,469)
+wbcd_z_score_train<-wbcd_scaled2[train,]
+wbcd_z_score_test<-wbcd_scaled2[-train,]
+```
+```{r}
+wbcd_z_score_train
+wbcd_z_score_test
+```
+```{r}
+kNN_result2<-knn(train = wbcd_z_score_train[,2:4], test = wbcd_z_score_test[,2:4], cl = wbcd_z_score_train$Diagnosis, k=11)
+kNN_result2
+```
+```{r}
+CrossTable(x = kNN_result2, y = wbcd_z_score_test$Diagnosis, prop.chisq = FALSE)
+```
+```{r}
+# Second improvement: testing alternative values of k
+```
+
+
+
+
+
+
+
+
+
+
+
+
+

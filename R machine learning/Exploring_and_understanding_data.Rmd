@@ -1,0 +1,97 @@
+---
+title: "Exploring_and_understanding_data"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(datasets)
+```
+```{r}
+mtcar<-datasets::mtcars
+mtcar
+```
+```{r}
+str(mtcar)
+```
+```{r}
+summary(mtcar[c("cyl","qsec")])
+```
+
+Measuring spread-quartiles and the five-number summary
+
+five number summary:
+1)min
+2)1st qu. (Q1)
+3)median
+4)third quartile (Q3)
+5)max
+
+```{r}
+range(mtcar$mpg)
+diff(range(mtcar$mpg))
+```
+```{r}
+# differrence of Q1 and Q3 is known as interquartile range (IQR)
+IQR(mtcar$mpg)
+```
+
+```{r}
+#By default, the quantile() function returns the  ve-number summary.
+quantile(mtcar$mpg)
+```
+```{r}
+quantile(mtcar$mpg, probs=c(0.33,0.99))
+```
+```{r}
+quantile(mtcar$mpg,seq(0,1,by=0.1))
+```
+
+```{r}
+require(ggplot2)
+```
+```{r}
+ggplot(data = mtcar)+
+  geom_point(mapping = aes(x=wt,y=mpg,colour=cyl),size=4)
+```
+```{r}
+ggplot(data = mtcar)+
+  geom_point(mapping = aes(x=wt,y=mpg,colour=factor(cyl)),size=4,alpha=0.7)+
+  geom_line(mapping=aes(x=wt, y=mpg, group=cyl,colour=factor(cyl)))
+```
+```{r}
+cyl_table<-table(mtcar$cyl)
+cyl_prop<-prop.table(cyl_table)
+```
+
+```{r}
+install.packages('gmodels')
+```
+
+```{r}
+require(gmodels)
+```
+```{r}
+chick<-datasets::ChickWeight
+```
+```{r}
+CrossTable(x = chick$weight[1:10], y=chick$Diet[1:10])
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

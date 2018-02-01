@@ -1,0 +1,83 @@
+---
+title: "Regression Trees"
+output: html_document
+---
+
+
+```{r}
+require(psych)
+```
+```{r}
+tee<-c(1,1,2,2,3,4,5,5,6,6,7,7,7,7)
+at1<-c(1,1,2,2,3,4,5,5)
+at2<-c(6,6,7,7,7,7)
+bt1<-c(1,1,2,2,3,4)
+bt2<-c(5,5,6,6,7,7,7,7)
+
+```
+
+
+1. Collecting Data
+```{r}
+download.file('https://archive.ics.uci.edu/ml/machine-learning-databases/wine-quality/winequality-red.csv',destfile = '/Users/yisongdong/Desktop/MSF&Python/MSF/Big Data Analysis/machine_learning/Quality of Wine/redwine.csv')
+```
+```{r}
+download.file('https://archive.ics.uci.edu/ml/machine-learning-databases/wine-quality/winequality-white.csv',destfile = '/Users/yisongdong/Desktop/MSF&Python/MSF/Big Data Analysis/machine_learning/Quality of Wine/whitewine.csv')
+```
+
+```{r}
+download.file('https://archive.ics.uci.edu/ml/machine-learning-databases/wine-quality/winequality.names',destfile = '/Users/yisongdong/Desktop/MSF&Python/MSF/Big Data Analysis/machine_learning/wine.txt')
+```
+```{r}
+redwine<-read.delim(file='/Users/yisongdong/Desktop/MSF&Python/MSF/Big Data Analysis/machine_learning/Quality of Wine/redwine.csv',header=TRUE,sep=';',stringsAsFactors = FALSE)
+```
+
+```{r}
+whitewine<-read.delim(file='/Users/yisongdong/Desktop/MSF&Python/MSF/Big Data Analysis/machine_learning/Quality of Wine/whitewine.csv',header=TRUE,sep=';',stringsAsFactors = FALSE)
+```
+```{r}
+str(whitewine)
+```
+```{r}
+hist(whitewine$quality)
+hist(redwine$quality)
+```
+
+2. Exploring Data
+```{r}
+require(tidyverse)
+require(dplyr)
+set.seed(1102)
+train<-sort(sample(4898,3750,replace=FALSE))
+train_data<-whitewine[train,]
+test_data<-whitewine[-train,]
+```
+```{r}
+test_data
+```
+```{r}
+if(!require(rpart)){
+  install.packages('rpart')
+}
+```
+```{r}
+require(rpart.plot)
+```
+
+```{r}
+m.rpart<-rpart(quality~., data=train_data)
+rpart.plot(m.rpart,type=1, extra=1, digits = 3, fallen.leaves = FALSE)
+```
+```{r}
+p.rpart<-predict(m.rpart,test_data)
+```
+```{r}
+cor(p.rpart,test_data$quality)
+```
+```{r}
+CrossTable(p.rpart,test_data$quality)
+```
+
+
+
+
